@@ -6,24 +6,18 @@ import urllib.parse
 from datetime import datetime
 from pytz import timezone
 
-# botのアクセストークン
-TOKEN = ''
-# botの出力先チャンネルID
-CHANNEL_ID = ''
+# made for this prj
+import config
 
-# DiscordのサーバーID
-GUILD_ID = ''
 
-# UnbelievaBoatのアクセストークン
-UNBELIEVABOAT_TOKEN = ''
 # UnbelievaBoatのAPI(v1)のベースURL
 UNBELIEVABOAT_BASE_URL = 'https://unbelievaboat.com/api/v1/'
 # UnbelievaBoatのGet Balance APIのURL(/users/の後にユーザーIDをつける)
-UNBELIEVABOAT_GETBALANCE_URL = UNBELIEVABOAT_BASE_URL + 'guilds/' + GUILD_ID + '/users/'
+UNBELIEVABOAT_GETBALANCE_URL = UNBELIEVABOAT_BASE_URL + 'guilds/' + config.DISCORD_GUILD_ID + '/users/'
 
 headers = {
     "accept": "application/json",
-    "Authorization": UNBELIEVABOAT_TOKEN
+    "Authorization": config.UNBELIEVABOAT_TOKEN
 }
 
 # UnbelievaBoatの !money コマンド(Check your balance and leaderboard position)の返信メッセージの原型
@@ -78,7 +72,7 @@ class MyView(View):
 		response = requests.get(UNBELIEVABOAT_GETBALANCE_URL + str(interaction.user.id), headers=headers)
 		response_json = response.json()
 		# 返信用メッセージの作成
-		msg_balance['author']['url'] = 'https://unbelievaboat.com/leaderboard/' + GUILD_ID + '/' + response_json['user_id']
+		msg_balance['author']['url'] = 'https://unbelievaboat.com/leaderboard/' + config.DISCORD_GUILD_ID + '/' + response_json['user_id']
 		msg_balance['author']['name'] = interaction.user.display_name
 		msg_balance['author']['icon_url'] = update_query(remove_all_queries(interaction.user.display_avatar.url), 'size', '128')
 		msg_balance['fields'][0]['value'] = ':coin: ' + str(response_json['cash'])
@@ -113,7 +107,7 @@ class MyView(View):
 async def on_ready():
 	#now = datetime.now(timezone('Asia/Tokyo'))
 	# 起動したらログイン通知を表示する
-	#await client.get_channel(int(CHANNEL_ID)).send(f'We have logged in as {client.user}')
+	await client.get_channel(int(config.DISCORD_CHANNEL_ID_UNBELIEVABOAT_DISP)).send(f'We have logged in as {client.user}')
 	# 定期実行のためのループ開始
 	timeloop.start()
 
@@ -121,10 +115,11 @@ async def on_ready():
 @tasks.loop(seconds=60)
 async def timeloop():
 	now = datetime.now(timezone('Asia/Tokyo'))
-	if now.hour == 0 and now.minute == 1:
+#	if now.hour == 0 and now.minute == 1:
+	if now.hour == 11 and now.minute == 27:
 		view = MyView()
 		tracker = ViewTracker(view, timeout=None)
-		await tracker.track(MessageProvider(client.get_channel(int(CHANNEL_ID))))
+		await tracker.track(MessageProvider(client.get_channel(int(config.DISCORD_CHANNEL_ID_UNBELIEVABOAT_DISP))))
 
 # botの起動とDiscordサーバーへの接続
-client.run(TOKEN)
+client.run(config.DISCORD_TOKEN)
